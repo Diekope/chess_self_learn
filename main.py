@@ -317,8 +317,19 @@ class ChessWindow(QMainWindow):
         self.coaching_label = QLabel(""); self.coaching_label.setStyleSheet("font-size: 15px; color: #769656; font-weight: bold; border: none;"); self.coaching_label.setAlignment(Qt.AlignmentFlag.AlignCenter); self.coaching_label.setWordWrap(True); cf_l.addWidget(self.coaching_label); gm_l.addWidget(self.coaching_frame)
         self.move_list_text = QTextEdit(); self.move_list_text.setReadOnly(True); self.move_list_text.setStyleSheet("background: #1e1e1e; border: 1px solid #3d3b38; color: #bababa; font-family: 'Menlo', 'Courier New', 'DejaVu Sans Mono', monospace;"); gm_l.addWidget(self.move_list_text)
         self.undo_info_label = QLabel("Retours: ∞"); self.undo_info_label.setAlignment(Qt.AlignmentFlag.AlignCenter); self.undo_info_label.setStyleSheet("color: #8a8885; margin-bottom: 20px;"); gm_l.addWidget(self.undo_info_label)
-        self.game_undo_btn = QPushButton("RETOUR"); self.game_undo_btn.setFixedHeight(45); self.game_undo_btn.setStyleSheet("background-color: #3d3b38; color: white; font-weight: bold; border-radius: 5px;"); self.game_undo_btn.clicked.connect(self.undo_move); gm_l.addWidget(self.game_undo_btn)
-        gm_l.addSpacing(10); self.draw_btn = QPushButton("OFFRIR NULLE"); self.draw_btn.setFixedHeight(45); self.draw_btn.setStyleSheet("background-color: #3d3b38; color: white; font-weight: bold; border-radius: 5px;"); self.draw_btn.clicked.connect(self.offer_draw); gm_l.addWidget(self.draw_btn)
+        self.game_undo_btn = QPushButton("RETOUR")
+        self.game_undo_btn.setFixedHeight(45)
+        self.game_undo_btn.setStyleSheet("background-color: #3d3b38; color: white; font-weight: bold; border-radius: 5px;")
+        self.game_undo_btn.clicked.connect(self.undo_move)
+        gm_l.addWidget(self.game_undo_btn)
+        
+        self.copy_pgn_btn = QPushButton("COPIER PGN")
+        self.copy_pgn_btn.setFixedHeight(45)
+        self.copy_pgn_btn.setStyleSheet("background-color: #3d3b38; color: white; font-weight: bold; border-radius: 5px;")
+        self.copy_pgn_btn.clicked.connect(self.copy_pgn)
+        gm_l.addWidget(self.copy_pgn_btn)
+
+        gm_l.addSpacing(10)
         self.resign_btn = QPushButton("ABANDONNER"); self.resign_btn.setFixedHeight(45); self.resign_btn.setStyleSheet("background-color: #a04040; color: white; font-weight: bold; border-radius: 5px;"); self.resign_btn.clicked.connect(self.resign); gm_l.addWidget(self.resign_btn); gm_l.addStretch(); self.sidebar_stack.addWidget(gm_w)
     def start_game(self):
         if not self.stockfish_path: QMessageBox.critical(self, "Erreur", "Stockfish introuvable."); return
@@ -392,6 +403,28 @@ class ChessWindow(QMainWindow):
         elif len(self.board.move_stack)==1: self.board.pop()
         if self.difficulty=="Moyen": self.undos_remaining-=1
         self.board_widget.update_board(None); self.update_status_labels(); self.update_undo_button_state(); self.update_material_ui(); self.update_move_list(); self.coaching_label.setText(""); self.coaching_frame.setVisible(False)
+    def copy_pgn(self):
+        import chess.pgn
+        import io
+        game = chess.pgn.Game()
+        # Add headers
+        game.headers["Event"] = "Chess Self-Learn Local Match"
+        game.headers["Site"] = "Local Machine"
+        game.headers["White"] = "Joueur" if self.player_color == chess.WHITE else "Stockfish"
+        game.headers["Black"] = "Joueur" if self.player_color == chess.BLACK else "Stockfish"
+        
+        node = game
+        for move in self.board.move_stack:
+            node = node.add_main_line(move)
+            
+        exporter = chess.pgn.StringExporter(columns=None, headers=True, comments=True)
+        pgn_string = game.accept(exporter)
+        
+        # Copy to clipboard
+        cb = QApplication.clipboard()
+        cb.setText(pgn_string)
+        QMessageBox.information(self, "PGN Copié", "L'historique de la partie (PGN) a été copié dans le presse-papier.\nVous pouvez le coller sur Lichess ou Chess.com pour l'analyser.")
+
     def resign(self):
         if not self.game_active: return
         self.show_accuracy_report("Tu as abandonné.")
