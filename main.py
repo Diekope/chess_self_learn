@@ -405,18 +405,13 @@ class ChessWindow(QMainWindow):
         self.board_widget.update_board(None); self.update_status_labels(); self.update_undo_button_state(); self.update_material_ui(); self.update_move_list(); self.coaching_label.setText(""); self.coaching_frame.setVisible(False)
     def copy_pgn(self):
         import chess.pgn
-        import io
-        game = chess.pgn.Game()
+        game = chess.pgn.Game.from_board(self.board)
         # Add headers
         game.headers["Event"] = "Chess Self-Learn Local Match"
         game.headers["Site"] = "Local Machine"
         game.headers["White"] = "Joueur" if self.player_color == chess.WHITE else "Stockfish"
         game.headers["Black"] = "Joueur" if self.player_color == chess.BLACK else "Stockfish"
         
-        node = game
-        for move in self.board.move_stack:
-            node = node.add_main_line(move)
-            
         exporter = chess.pgn.StringExporter(columns=None, headers=True, comments=True)
         pgn_string = game.accept(exporter)
         
