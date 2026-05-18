@@ -60,4 +60,6 @@ python main.py
 - **Audio** : `QtMultimedia`
 
 ---
-Développé avec ❤️ pour les passionnés d'échecs qui veulent progresser localement.
+Ce projet a été entièrement **vibe-codé avec Gemini**. 🚀
+
+Il est libre de droit et ouvert à tous. N'hésitez pas à **forker** le projet, proposer des améliorations ou l'utiliser comme base pour vos propres créations !
